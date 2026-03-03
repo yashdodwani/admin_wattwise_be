@@ -12,29 +12,31 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def hash_password(password: str) -> str:
     """
-    Hash a password using bcrypt.
+    Hash a password using bcrypt, ensuring it is truncated to 72 characters.
 
     Args:
-        password (str): Plain text password
+        password (str): The plaintext password to hash.
 
     Returns:
-        str: Hashed password
+        str: The hashed password.
     """
-    return pwd_context.hash(password)
+    truncated_password = password[:72]  # Truncate to 72 characters
+    return pwd_context.hash(truncated_password)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
-    Verify a password against its hash.
+    Verify a plaintext password against a hashed password.
 
     Args:
-        plain_password (str): Plain text password to verify
-        hashed_password (str): Hashed password to compare against
+        plain_password (str): The plaintext password to verify.
+        hashed_password (str): The hashed password to compare against.
 
     Returns:
-        bool: True if password matches, False otherwise
+        bool: True if the password matches, False otherwise.
     """
-    return pwd_context.verify(plain_password, hashed_password)
+    truncated_password = plain_password[:72]  # Truncate to 72 characters
+    return pwd_context.verify(truncated_password, hashed_password)
 
 
 def generate_secure_password(length: int = 12) -> str:
@@ -81,4 +83,3 @@ def generate_otp() -> str:
         # Output: "123456"
     """
     return ''.join(secrets.choice(string.digits) for _ in range(6))
-

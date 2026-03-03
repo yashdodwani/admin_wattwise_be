@@ -8,9 +8,19 @@ from sqlalchemy.orm import Session
 from typing import Optional
 
 from config.database import get_db
-from utils.jwt_handler import verify_token
-from models.admin import Admin
-from schemas.admin_schema import TokenPayload
+try:
+    # Try relative import first (when imported as a module)
+    from ..utils.jwt_handler import verify_token
+    from ..models.admin import Admin
+    from ..schemas.admin_schema import TokenPayload
+except ImportError:
+    # Fallback to absolute import (when run directly)
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+    from utils.jwt_handler import verify_token
+    from models.admin import Admin
+    from schemas.admin_schema import TokenPayload
 
 security = HTTPBearer()
 
@@ -91,4 +101,3 @@ def verify_admin_role(
     # In this system, all authenticated users are admins
     # This dependency is for future extensibility (e.g., super-admin roles)
     return current_admin
-

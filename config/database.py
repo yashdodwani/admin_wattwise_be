@@ -18,7 +18,7 @@ DATABASE_URL = os.getenv(
     "DATABASE_URL",
     "postgresql://admin:password@localhost:5432/wattwise_admin"
 )
-
+print(DATABASE_URL)
 # Create engine
 engine = create_engine(
     DATABASE_URL,
@@ -67,7 +67,15 @@ def init_db():
             init_db()
             print("Database initialized successfully")
     """
-    from models.admin import Base
+    try:
+        # Try relative import first (when imported as a module)
+        from ..models.admin import Base
+    except ImportError:
+        # Fallback to absolute import (when run directly)
+        import sys
+        from pathlib import Path
+        sys.path.insert(0, str(Path(__file__).parent.parent))
+        from models.admin import Base
 
     Base.metadata.create_all(bind=engine)
     print("✓ Database tables created successfully")
@@ -79,7 +87,15 @@ def drop_db():
 
     WARNING: This will delete all data. Use only for development/testing.
     """
-    from models.admin import Base
+    try:
+        # Try relative import first (when imported as a module)
+        from ..models.admin import Base
+    except ImportError:
+        # Fallback to absolute import (when run directly)
+        import sys
+        from pathlib import Path
+        sys.path.insert(0, str(Path(__file__).parent.parent))
+        from models.admin import Base
 
     Base.metadata.drop_all(bind=engine)
     print("✓ All database tables dropped")
