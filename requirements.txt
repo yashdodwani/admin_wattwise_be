@@ -10,4 +10,5 @@ bcrypt
 python-multipart
 python-dotenv
 email-validator
-
+alembic
+mako

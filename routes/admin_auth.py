@@ -24,7 +24,12 @@ from schemas.admin_schema import (
     VerifyOTPRequest,
     AdminResponse
 )
-from utils.password import hash_password, verify_password, generate_secure_password, generate_otp
+from utils.password import (
+    hash_password,
+    verify_password,
+    generate_secure_password,
+    generate_otp
+)
 from utils.jwt_handler import create_access_token, get_token_expiry_seconds
 from utils.otp_helper import send_otp_email, store_otp, verify_otp, invalidate_otp
 from utils.dependencies import get_current_admin, get_db
@@ -330,4 +335,3 @@ def logout(
     return {
         "message": f"Admin {current_admin.admin_id} logged out successfully"
     }
-

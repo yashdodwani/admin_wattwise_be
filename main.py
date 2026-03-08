@@ -20,6 +20,8 @@ import logging
 
 # Import routes
 from routes.admin_auth import router as admin_auth_router
+from routes.users import router as users_router
+from routes.complaints import router as complaints_router
 
 # Configure logging
 logging.basicConfig(
@@ -93,6 +95,8 @@ def root():
 
 # Include routers
 app.include_router(admin_auth_router)
+app.include_router(users_router)
+app.include_router(complaints_router)
 
 
 # Global exception handler for better error responses
@@ -128,4 +132,3 @@ if __name__ == "__main__":
         reload=True,
         log_level="info"
     )
-
