@@ -7,6 +7,7 @@ Update DATABASE_URL with your actual PostgreSQL connection string.
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.ext.declarative import declarative_base
 import os
 from dotenv import load_dotenv
 from typing import Generator
@@ -34,6 +35,9 @@ SessionLocal = sessionmaker(
     autoflush=False,
     bind=engine
 )
+
+# Define Base for SQLAlchemy models
+Base = declarative_base()
 
 
 def get_db() -> Generator[Session, None, None]:
@@ -104,4 +108,3 @@ def drop_db():
 if __name__ == "__main__":
     # Initialize database when run directly
     init_db()
-
