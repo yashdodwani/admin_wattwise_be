@@ -3,10 +3,8 @@ Database models for the WattWise Admin Portal.
 """
 
 from sqlalchemy import Column, String, Boolean, DateTime, Integer
-from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
-
-Base = declarative_base()
+from config.database import Base
 
 
 class Admin(Base):

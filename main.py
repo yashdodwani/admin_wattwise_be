@@ -23,6 +23,12 @@ from routes.admin_auth import router as admin_auth_router
 from routes.users import router as users_router
 from routes.complaints import router as complaints_router
 
+# Import database and models to ensure tables are created
+from config.database import engine, Base
+import models.admin  # noqa: F401
+import models.user   # noqa: F401
+import models.complaint  # noqa: F401
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -55,6 +61,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.on_event("startup")
+def on_startup():
+    """Create all database tables on application startup."""
+    Base.metadata.create_all(bind=engine)
+    logger.info("Database tables created/verified successfully.")
 
 
 # Health check endpoint
