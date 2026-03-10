@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from uuid import UUID
 from datetime import datetime
@@ -21,8 +21,8 @@ class ComplaintBase(BaseModel):
     issue_type: str
     priority: Priority
     status: Status
-    agent_name: Optional[str]
-    description: Optional[str]
+    agent_name: Optional[str] = None
+    description: Optional[str] = None
 
 class ComplaintCreate(ComplaintBase):
     pass
@@ -31,9 +31,8 @@ class ComplaintUpdate(BaseModel):
     status: Status
 
 class ComplaintResponse(ComplaintBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     created_at: datetime
-    updated_at: Optional[datetime]
-
-    class Config:
-        orm_mode = True
+    updated_at: Optional[datetime] = None

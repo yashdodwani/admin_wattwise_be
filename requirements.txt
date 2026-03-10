@@ -12,3 +12,6 @@ python-dotenv
 email-validator
 alembic
 mako
+openpyxl
+reportlab
+httpx

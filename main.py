@@ -22,6 +22,8 @@ import logging
 from routes.admin_auth import router as admin_auth_router
 from routes.users import router as users_router
 from routes.complaints import router as complaints_router
+from routes.revenue_routes import router as revenue_router
+from routes.sms_routes import router as sms_router
 
 # Import database and models to ensure tables are created
 from config.database import engine, Base
@@ -110,6 +112,8 @@ def root():
 app.include_router(admin_auth_router)
 app.include_router(users_router)
 app.include_router(complaints_router)
+app.include_router(revenue_router)
+app.include_router(sms_router)
 
 
 # Global exception handler for better error responses

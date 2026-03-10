@@ -32,11 +32,17 @@ config.set_main_option("sqlalchemy.url", db_url)
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from config.database import Base, init_db  # Import your Base metadata and init_db function here
+from config.database import Base  # Import shared Base metadata
+
+# Import every model so Alembic can detect schema changes via autogenerate
+from models.admin import Admin  # noqa: F401
+from models.user import User  # noqa: F401
+from models.complaint import Complaint  # noqa: F401
+from models.transaction import Transaction  # noqa: F401
+from models.sms import SMSLog, SMSTemplate  # noqa: F401
+
 target_metadata = Base.metadata
 
-# Ensure database tables are initialized before migrations
-init_db()
 
 
 def run_migrations_offline():

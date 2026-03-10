@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from uuid import UUID
 from datetime import datetime
@@ -22,14 +22,13 @@ class UserCreate(UserBase):
     pass
 
 class UserUpdate(BaseModel):
-    name: Optional[str]
-    phone: Optional[str]
-    state: Optional[str]
-    discom: Optional[str]
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    state: Optional[str] = None
+    discom: Optional[str] = None
 
 class UserResponse(UserBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     created_at: datetime
-
-    class Config:
-        orm_mode = True
