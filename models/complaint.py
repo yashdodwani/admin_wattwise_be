@@ -1,10 +1,8 @@
 from sqlalchemy import Column, String, Enum, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import declarative_base
 import uuid
 from enum import Enum as PyEnum
-
-Base = declarative_base()
+from config.database import Base
 
 class Priority(PyEnum):
     LOW = "Low"

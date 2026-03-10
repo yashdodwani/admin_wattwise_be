@@ -6,8 +6,7 @@ Update DATABASE_URL with your actual PostgreSQL connection string.
 """
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, Session, declarative_base
 import os
 from dotenv import load_dotenv
 from typing import Generator
@@ -63,23 +62,15 @@ def init_db():
     """
     Initialize database tables.
 
-    This function creates all tables defined in SQLAlchemy models.
-    Call this once during application startup.
-
-    Example:
-        if __name__ == "__main__":
-            init_db()
-            print("Database initialized successfully")
+    Imports every model so SQLAlchemy registers them with the shared
+    Base before calling create_all().
     """
-    try:
-        # Try relative import first (when imported as a module)
-        from ..models.admin import Base
-    except ImportError:
-        # Fallback to absolute import (when run directly)
-        import sys
-        from pathlib import Path
-        sys.path.insert(0, str(Path(__file__).parent.parent))
-        from models.admin import Base
+    # Import all models to register them with Base.metadata
+    import models.admin       # noqa: F401
+    import models.user        # noqa: F401
+    import models.complaint   # noqa: F401
+    import models.transaction # noqa: F401
+    import models.sms         # noqa: F401
 
     Base.metadata.create_all(bind=engine)
     print("✓ Database tables created successfully")
@@ -91,15 +82,11 @@ def drop_db():
 
     WARNING: This will delete all data. Use only for development/testing.
     """
-    try:
-        # Try relative import first (when imported as a module)
-        from ..models.admin import Base
-    except ImportError:
-        # Fallback to absolute import (when run directly)
-        import sys
-        from pathlib import Path
-        sys.path.insert(0, str(Path(__file__).parent.parent))
-        from models.admin import Base
+    import models.admin       # noqa: F401
+    import models.user        # noqa: F401
+    import models.complaint   # noqa: F401
+    import models.transaction # noqa: F401
+    import models.sms         # noqa: F401
 
     Base.metadata.drop_all(bind=engine)
     print("✓ All database tables dropped")
