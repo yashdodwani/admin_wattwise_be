@@ -2,17 +2,20 @@
 Password hashing and generation utilities.
 """
 
-from passlib.context import CryptContext
+import bcrypt
 import secrets
 import string
 
-# Password hashing context using bcrypt
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def _to_72_bytes(password: str) -> bytes:
+    """Encode a password to UTF-8 bytes and truncate to 72 bytes."""
+    encoded = password.encode("utf-8")
+    return encoded[:72]
 
 
 def hash_password(password: str) -> str:
     """
-    Hash a password using bcrypt, ensuring it is truncated to 72 characters.
+    Hash a password using bcrypt, ensuring it is truncated to 72 bytes.
 
     Args:
         password (str): The plaintext password to hash.
@@ -20,8 +23,7 @@ def hash_password(password: str) -> str:
     Returns:
         str: The hashed password.
     """
-    truncated_password = password[:72]  # Truncate to 72 characters
-    return pwd_context.hash(truncated_password)
+    return bcrypt.hashpw(_to_72_bytes(password), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -35,8 +37,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     Returns:
         bool: True if the password matches, False otherwise.
     """
-    truncated_password = plain_password[:72]  # Truncate to 72 characters
-    return pwd_context.verify(truncated_password, hashed_password)
+    return bcrypt.checkpw(_to_72_bytes(plain_password), hashed_password.encode("utf-8"))
 
 
 def generate_secure_password(length: int = 12) -> str:
