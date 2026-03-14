@@ -88,7 +88,7 @@ def update_admin_profile(
     db: Session = Depends(get_db),
 ):
     """Update editable admin profile fields and hash password when provided."""
-    updates = payload.model_dump(exclude_unset=True)
+    updates = payload.model_dump(exclude_unset=True, exclude_none=True)
     if not updates:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
