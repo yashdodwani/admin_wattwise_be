@@ -17,6 +17,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import logging
+from sqlalchemy.exc import SQLAlchemyError
 
 # Import routes
 from routes.admin_auth import router as admin_auth_router
@@ -24,12 +25,19 @@ from routes.users import router as users_router
 from routes.complaints import router as complaints_router
 from routes.revenue_routes import router as revenue_router
 from routes.sms_routes import router as sms_router
+from routes.dashboard_routes import router as dashboard_router
+from routes.settings_routes import router as settings_router
+from routes.reference_routes import router as reference_router
 
 # Import database and models to ensure tables are created
 from config.database import engine, Base
 import models.admin  # noqa: F401
 import models.user   # noqa: F401
 import models.complaint  # noqa: F401
+import models.transaction  # noqa: F401
+import models.sms  # noqa: F401
+import models.settings  # noqa: F401
+import models.reference_data  # noqa: F401
 
 # Configure logging
 logging.basicConfig(
@@ -68,8 +76,12 @@ app.add_middleware(
 @app.on_event("startup")
 def on_startup():
     """Create all database tables on application startup."""
-    Base.metadata.create_all(bind=engine)
-    logger.info("Database tables created/verified successfully.")
+    try:
+        Base.metadata.create_all(bind=engine)
+        logger.info("Database tables created/verified successfully.")
+    except SQLAlchemyError as exc:
+        logger.error("Database initialization skipped: %s", str(exc))
+        logger.error("Check your DATABASE_URL/DB_URI in .env and rerun migrations.")
 
 
 # Health check endpoint
@@ -114,6 +126,9 @@ app.include_router(users_router)
 app.include_router(complaints_router)
 app.include_router(revenue_router)
 app.include_router(sms_router)
+app.include_router(dashboard_router)
+app.include_router(settings_router)
+app.include_router(reference_router)
 
 
 # Global exception handler for better error responses
