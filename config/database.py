@@ -10,15 +10,39 @@ from sqlalchemy.orm import sessionmaker, Session, declarative_base
 import os
 from dotenv import load_dotenv
 from typing import Generator
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 load_dotenv()
 
-# Database URL from environment or use default
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://admin:password@localhost:5432/wattwise_admin"
-)
-print(DATABASE_URL)
+
+def _resolve_database_url() -> str:
+    """Resolve DB URL from supported env keys with localhost fallback for dev."""
+    db_url = (
+        os.getenv("DATABASE_URL")
+        or os.getenv("DB_URI")
+        or os.getenv("DATABASE_URI")
+    )
+    if not db_url:
+        return "postgresql://admin:password@localhost:5432/wattwise_admin"
+
+    # Heroku-style postgres:// URLs are not accepted by SQLAlchemy 2.x
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+    # Neon requires SSL. If omitted, enforce it automatically.
+    parsed = urlparse(db_url)
+    if parsed.scheme.startswith("postgresql") and ("neon.tech" in (parsed.hostname or "")):
+        q = dict(parse_qsl(parsed.query, keep_blank_values=True))
+        if "sslmode" not in q:
+            q["sslmode"] = "require"
+            db_url = urlunparse(parsed._replace(query=urlencode(q)))
+
+    return str(db_url)
+
+
+# Database URL from environment or fallback for local development
+DATABASE_URL = _resolve_database_url()
+
 # Create engine
 engine = create_engine(
     DATABASE_URL,
@@ -71,6 +95,8 @@ def init_db():
     import models.complaint   # noqa: F401
     import models.transaction # noqa: F401
     import models.sms         # noqa: F401
+    import models.settings    # noqa: F401
+    import models.reference_data  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
     print("✓ Database tables created successfully")
@@ -87,6 +113,8 @@ def drop_db():
     import models.complaint   # noqa: F401
     import models.transaction # noqa: F401
     import models.sms         # noqa: F401
+    import models.settings    # noqa: F401
+    import models.reference_data  # noqa: F401
 
     Base.metadata.drop_all(bind=engine)
     print("✓ All database tables dropped")

@@ -15,3 +15,4 @@ mako
 openpyxl
 reportlab
 httpx
+pytest
