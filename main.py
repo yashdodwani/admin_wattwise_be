@@ -13,7 +13,8 @@ Features:
 - SQLAlchemy ORM integration
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
+from utils.dependencies import get_current_admin
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import logging
@@ -122,13 +123,13 @@ def root():
 
 # Include routers
 app.include_router(admin_auth_router)
-app.include_router(users_router)
-app.include_router(complaints_router)
-app.include_router(revenue_router)
-app.include_router(sms_router)
-app.include_router(dashboard_router)
-app.include_router(settings_router)
-app.include_router(reference_router)
+app.include_router(users_router, dependencies=[Depends(get_current_admin)])
+app.include_router(complaints_router, dependencies=[Depends(get_current_admin)])
+app.include_router(revenue_router, dependencies=[Depends(get_current_admin)])
+app.include_router(sms_router, dependencies=[Depends(get_current_admin)])
+app.include_router(dashboard_router, dependencies=[Depends(get_current_admin)])
+app.include_router(settings_router, dependencies=[Depends(get_current_admin)])
+app.include_router(reference_router, dependencies=[Depends(get_current_admin)])
 
 
 # Global exception handler for better error responses
