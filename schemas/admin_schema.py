@@ -13,34 +13,28 @@ class AdminRegisterRequest(BaseModel):
         "example": {
             "name": "John Doe",
             "email": "john@example.com",
-            "phone_number": "1234567890",
-            "descom_name": "Power Company A",
-            "is_active": True
+            "phone_number": "1234567890"
         }
     })
 
     name: str = Field(..., min_length=2, max_length=255, description="Admin full name")
     email: EmailStr = Field(..., description="Unique email address")
     phone_number: str = Field(..., min_length=10, max_length=15, description="Phone number")
-    descom_name: str = Field(..., min_length=1, max_length=255, description="Distribution company name")
-    is_active: bool = Field(default=True, description="Admin status")
 
 
 class AdminRegisterResponse(BaseModel):
     """Schema for admin registration response."""
     model_config = ConfigDict(json_schema_extra={
         "example": {
-            "admin_id": "ADM123456",
-            "generated_password": "Secure@Pass123",
-            "message": "Admin registered successfully",
-            "email": "john@example.com"
+            "message": "Registration successful",
+            "admin_id": "ADM1023",
+            "password": "Secure@Pass1"
         }
     })
 
-    admin_id: str = Field(..., description="Generated unique admin ID")
-    generated_password: str = Field(..., description="Auto-generated secure password")
     message: str = Field(..., description="Success message")
-    email: str = Field(..., description="Admin email")
+    admin_id: str = Field(..., description="Generated unique admin ID")
+    password: str = Field(..., description="Auto-generated secure password")
 
 
 class AdminLoginRequest(BaseModel):
