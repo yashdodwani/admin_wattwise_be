@@ -41,17 +41,17 @@ router = APIRouter(prefix="/admin", tags=["Admin Authentication"])
 
 def generate_unique_admin_id(db: Session) -> str:
     """
-    Generate unique admin ID with format: ADM + 6 random digits.
+    Generate unique admin ID with format: ADM + 4 random digits.
 
     Args:
         db (Session): Database session
 
     Returns:
-        str: Unique admin ID
+        str: Unique admin ID (e.g. ADM1023)
     """
     while True:
-        # Generate random 6-digit number
-        random_digits = ''.join(secrets.choice(string.digits) for _ in range(6))
+        # Generate random 4-digit number
+        random_digits = ''.join(secrets.choice(string.digits) for _ in range(4))
         admin_id = f"ADM{random_digits}"
 
         # Check if ID is unique
@@ -70,24 +70,21 @@ def register_admin(
 
     **Steps:**
     1. Validate unique email
-    2. Generate unique admin_id (ADM + 6 digits)
+    2. Generate unique admin_id (ADM + 4 digits)
     3. Generate secure password
     4. Hash password
-    5. Save admin to database
-    6. Return admin_id and generated_password
+    5. Save admin to database with descom_name="DEFAULT"
+    6. Return admin_id and password
 
     **Request Body:**
     - name: Admin's full name
     - email: Unique email address
     - phone_number: Contact phone number
-    - descom_name: Distribution company name
-    - is_active: Admin status (default: True)
 
     **Response:**
-    - admin_id: Generated unique ID
-    - generated_password: Auto-generated secure password
     - message: Success message
-    - email: Registered email
+    - admin_id: Generated unique ID (e.g. ADM1023)
+    - password: Auto-generated secure password
     """
     # Check if email already exists
     existing_admin = db.query(Admin).filter(Admin.email == request.email).first()
@@ -97,24 +94,23 @@ def register_admin(
             detail="Email already registered"
         )
 
-    # Generate unique admin ID
+    # Generate unique admin ID (ADM + 4 random digits)
     admin_id = generate_unique_admin_id(db)
 
-    # Generate secure password
-    generated_password = generate_secure_password()
+    # Generate and hash a secure password (8-10 chars)
+    generated_password = generate_secure_password(length=10)
 
     # Hash password
     hashed_password = hash_password(generated_password)
 
-    # Create new admin
+    # Create new admin — descom_name defaults to "DEFAULT", is_active defaults to True
     new_admin = Admin(
         admin_id=admin_id,
         name=request.name,
         email=request.email,
         phone_number=request.phone_number,
-        descom_name=request.descom_name,
+        descom_name="DEFAULT",
         hashed_password=hashed_password,
-        is_active=request.is_active
     )
 
     # Save to database
@@ -123,10 +119,9 @@ def register_admin(
     db.refresh(new_admin)
 
     return AdminRegisterResponse(
+        message="Registration successful",
         admin_id=admin_id,
-        generated_password=generated_password,
-        email=request.email,
-        message=f"Admin registered successfully. Please log in with admin_id: {admin_id} and the provided password."
+        password=generated_password,
     )
 
 
