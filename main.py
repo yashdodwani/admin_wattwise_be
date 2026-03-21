@@ -29,6 +29,7 @@ from routes.sms_routes import router as sms_router
 from routes.dashboard_routes import router as dashboard_router
 from routes.settings_routes import router as settings_router
 from routes.reference_routes import router as reference_router
+from routes.notification_routes import router as notification_router
 
 # Import database and models to ensure tables are created
 from config.database import engine, Base
@@ -39,6 +40,7 @@ import models.transaction  # noqa: F401
 import models.sms  # noqa: F401
 import models.settings  # noqa: F401
 import models.reference_data  # noqa: F401
+import models.notification  # noqa: F401
 
 # Configure logging
 logging.basicConfig(
@@ -130,6 +132,7 @@ app.include_router(sms_router, dependencies=[Depends(get_current_admin)])
 app.include_router(dashboard_router, dependencies=[Depends(get_current_admin)])
 app.include_router(settings_router, dependencies=[Depends(get_current_admin)])
 app.include_router(reference_router, dependencies=[Depends(get_current_admin)])
+app.include_router(notification_router, dependencies=[Depends(get_current_admin)])
 
 
 # Global exception handler for better error responses
