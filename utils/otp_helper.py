@@ -5,6 +5,10 @@ OTP (One-Time Password) and email utilities.
 from datetime import datetime, timedelta
 from typing import Optional, Dict
 import logging
+import os
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 # Logger setup
 logger = logging.getLogger(__name__)
@@ -15,28 +19,52 @@ otp_storage: Dict[str, Dict] = {}
 
 def send_otp_email(email: str, otp: str) -> bool:
     """
-    Send OTP via email (placeholder function).
-
-    In production, integrate with:
-    - SendGrid
-    - AWS SES
-    - Gmail SMTP
-    - Any other email service
-
-    Args:
-        email (str): Recipient email address
-        otp (str): 6-digit OTP to send
-
-    Returns:
-        bool: True if email sent successfully
-
-    Example:
-        success = send_otp_email("john@example.com", "123456")
+    Send OTP via email using SMTP configuration from environment variables.
     """
-    # TODO: Implement actual email sending
-    logger.info(f"[PLACEHOLDER] OTP {otp} sent to {email}")
-    print(f"✉️  [TEST MODE] OTP: {otp} sent to {email}")
-    return True
+    smtp_server = os.getenv("SMTP_SERVER")
+    smtp_port = int(os.getenv("SMTP_PORT", 587))
+    smtp_username = os.getenv("SMTP_USERNAME")
+    smtp_password = os.getenv("SMTP_PASSWORD")
+    sender_email = os.getenv("SENDER_EMAIL")
+    sender_name = os.getenv("SENDER_NAME", "WattWise Admin")
+
+    if not all([smtp_server, smtp_username, smtp_password]):
+        logger.warning("SMTP configuration missing. Printing OTP to console.")
+        print(f"✉️  [TEST MODE] OTP: {otp} sent to {email}")
+        return True
+
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = f"{sender_name} <{sender_email}>"
+        msg['To'] = email
+        msg['Subject'] = "Your WattWise Admin OTP Code"
+
+        body = f"""
+        <html>
+          <body>
+            <h2>WattWise Admin Portal Login</h2>
+            <p>Your One-Time Password (OTP) is:</p>
+            <h1 style="color: #4CAF50; font-size: 32px;">{otp}</h1>
+            <p>This code is valid for 10 minutes.</p>
+            <p>If you did not request this code, please ignore this email.</p>
+          </body>
+        </html>
+        """
+        msg.attach(MIMEText(body, 'html'))
+
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(smtp_username, smtp_password)
+            server.send_message(msg)
+        
+        logger.info(f"OTP email sent successfully to {email}")
+        return True
+
+    except Exception as e:
+        logger.error(f"Failed to send email to {email}: {str(e)}")
+        # Fallback to console in development
+        print(f"✉️  [TEST MODE (Fallback)] OTP: {otp} sent to {email}")
+        return False
 
 
 def store_otp(email: str, otp: str, expiry_minutes: int = 10) -> None:
@@ -128,4 +156,3 @@ def get_otp_remaining_time(email: str) -> Optional[int]:
     remaining = (expiry - datetime.utcnow()).total_seconds()
 
     return max(0, int(remaining))
-
