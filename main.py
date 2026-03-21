@@ -18,6 +18,8 @@ from utils.dependencies import get_current_admin
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import logging
+import asyncio
+import httpx
 from sqlalchemy.exc import SQLAlchemyError
 
 # Import routes
@@ -136,6 +138,44 @@ app.include_router(sms_router, dependencies=[Depends(get_current_admin)])
 app.include_router(dashboard_router, dependencies=[Depends(get_current_admin)])
 app.include_router(settings_router, dependencies=[Depends(get_current_admin)])
 app.include_router(reference_router, dependencies=[Depends(get_current_admin)])
+
+
+async def ping_server():
+    """
+    Background task to ping the server every 9 minutes to prevent sleeping.
+    """
+    # Wait for the server to fully start
+    await asyncio.sleep(60)
+
+    # Get the external URL from Render or fallback to localhost
+    url = os.getenv("RENDER_EXTERNAL_URL") or os.getenv("APP_URL")
+    
+    if not url:
+        logger.warning("RENDER_EXTERNAL_URL not set. Self-ping deactivated. Set APP_URL for local/custom deployment.")
+        return
+
+    health_url = f"{url}/health"
+    logger.info(f"Starting keep-alive pings to {health_url} every 9 minutes.")
+    
+    async with httpx.AsyncClient() as client:
+        while True:
+            try:
+                # Sleep for 9 minutes (540 seconds)
+                await asyncio.sleep(540)
+                
+                logger.info(f"Sending keep-alive ping to {health_url}")
+                response = await client.get(health_url, timeout=10.0)
+                logger.info(f"Keep-alive ping status: {response.status_code}")
+                
+            except Exception as e:
+                logger.error(f"Keep-alive ping failed: {str(e)}")
+                # Setup retry with backoff or just continue to next cycle
+                await asyncio.sleep(60)
+
+@app.on_event("startup")
+async def start_background_pings():
+    """Start the keep-alive ping task."""
+    asyncio.create_task(ping_server())
 
 
 # Global exception handler for better error responses
