@@ -65,6 +65,12 @@ ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
 ]
 
+# Add optional extra origins from environment variable (comma-separated)
+import os
+extra_origins = os.getenv("ALLOWED_ORIGINS")
+if extra_origins:
+    ALLOWED_ORIGINS.extend([origin.strip() for origin in extra_origins.split(",")])
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
