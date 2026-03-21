@@ -13,14 +13,16 @@ Provides endpoints for:
 import uuid
 import datetime
 import logging
-from typing import List, Optional
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlalchemy.orm import Session
+from sqlalchemy import cast, String
 
 from config.database import get_db
 from models.sms import SMSLog, SMSTemplate
 from models.user import User
+from services.notification_service import create_system_notification
 from schemas.sms_schema import (
     SMSLogResponse,
     SendSMSRequest,
@@ -99,7 +101,7 @@ def send_single_sms(payload: SendSMSRequest, db: Session = Depends(get_db)):
     - Calls the `send_sms()` gateway function.
     - Persists the attempt (with final status) in the SMSLogs table.
     """
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.timezone.utc)
     success = send_sms(payload.phone_number, payload.message)
     status = "Sent" if success else "Failed"
 
@@ -114,6 +116,16 @@ def send_single_sms(payload: SendSMSRequest, db: Session = Depends(get_db)):
     db.add(log)
     db.commit()
     db.refresh(log)
+
+    # Create notification for SMS status
+    create_system_notification(
+        db=db,
+        title=f"SMS {status}",
+        message=f"SMS to {payload.phone_number} {status.lower()}",
+        type="sms",
+        priority="high" if status == "Failed" else "low",
+        reference_id=str(log.id)
+    )
 
     return SendSMSResponse(
         sms_id=log.sms_id,
@@ -162,16 +174,17 @@ def send_bulk_sms(payload: BulkSMSRequest, db: Session = Depends(get_db)):
 
     sent_count = 0
     failed_count = 0
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.timezone.utc)
 
     for user in users:
-        success = send_sms(user.phone, payload.message)
+        # Pylance might complain about user.phone type, but SQLAlchemy handles it.
+        success = send_sms(user.phone, payload.message) # type: ignore
         status = "Sent" if success else "Failed"
 
         log = SMSLog(
             sms_id=_generate_sms_id(),
-            user_id=user.user_id,
-            phone_number=user.phone,
+            user_id=user.user_id, # type: ignore
+            phone_number=user.phone, # type: ignore
             message=payload.message,
             status=status,
             sent_at=now,
@@ -183,6 +196,15 @@ def send_bulk_sms(payload: BulkSMSRequest, db: Session = Depends(get_db)):
             failed_count += 1
 
     db.commit()
+
+    # Notification for bulk SMS
+    create_system_notification(
+        db=db,
+        title=f"Bulk SMS Sent ({category})",
+        message=f"Sent: {sent_count}, Failed: {failed_count} to '{category}' users.",
+        type="sms",
+        priority="low" if failed_count == 0 else "medium"
+    )
 
     return BulkSMSResponse(
         sent=sent_count,
@@ -209,7 +231,7 @@ def retry_sms(
     # Support both UUID primary key and friendly sms_id
     log = (
         db.query(SMSLog).filter(SMSLog.sms_id == id).first()
-        or db.query(SMSLog).filter(SMSLog.id.cast(str) == id).first()
+        or db.query(SMSLog).filter(cast(SMSLog.id, String) == id).first()
     )
 
     if not log:
@@ -218,19 +240,31 @@ def retry_sms(
     if log.status == "Sent":
         raise HTTPException(status_code=400, detail="SMS was already sent successfully.")
 
-    success = send_sms(log.phone_number, log.message)
-    log.status = "Sent" if success else "Failed"
-    log.sent_at = datetime.datetime.utcnow()
+    success = send_sms(log.phone_number, log.message) # type: ignore
+    status = "Sent" if success else "Failed"
+
+    log.status = status
+    log.sent_at = datetime.datetime.now(datetime.timezone.utc)
     db.commit()
     db.refresh(log)
 
+    # Notification for retry result
+    create_system_notification(
+        db=db,
+        title=f"SMS Retry {status}",
+        message=f"Retried SMS to {log.phone_number}: {status}", # type: ignore
+        type="sms",
+        priority="high" if status == "Failed" else "low",
+        reference_id=str(log.id) # type: ignore
+    )
+
     return SendSMSResponse(
-        sms_id=log.sms_id,
-        user_id=log.user_id,
-        phone_number=log.phone_number,
-        message=log.message,
-        status=log.status,
-        sent_at=log.sent_at,
+        sms_id=log.sms_id, # type: ignore
+        user_id=log.user_id, # type: ignore
+        phone_number=log.phone_number, # type: ignore
+        message=log.message, # type: ignore
+        status=log.status, # type: ignore
+        sent_at=log.sent_at, # type: ignore
     )
 
 
@@ -263,14 +297,14 @@ def update_template(
     """
     template = (
         db.query(SMSTemplate).filter(SMSTemplate.template_id == id).first()
-        or db.query(SMSTemplate).filter(SMSTemplate.id.cast(str) == id).first()
+        or db.query(SMSTemplate).filter(cast(SMSTemplate.id, String) == id).first()
     )
 
     if not template:
         raise HTTPException(status_code=404, detail=f"SMS template '{id}' not found.")
 
     template.body = payload.body
-    template.updated_at = datetime.datetime.utcnow()
+    template.updated_at = datetime.datetime.now(datetime.timezone.utc)
     db.commit()
     db.refresh(template)
 
