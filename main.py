@@ -75,7 +75,10 @@ if extra_origins:
 
 app.add_middleware(
     CORSMiddleware,
+    # Allow specific origins
     allow_origins=ALLOWED_ORIGINS,
+    # Also allow any origin matching this regex (any HTTP/HTTPS) for flexibility
+    allow_origin_regex=r"https?://.*", 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
