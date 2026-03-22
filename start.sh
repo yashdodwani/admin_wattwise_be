@@ -34,6 +34,10 @@ python -c "from config.database import init_db; init_db()" 2>/dev/null || {
     echo "⚠️  Database initialization skipped (check your DATABASE_URL)"
 }
 
+# Run Alembic migraines
+echo "🔄 Running database migrations..."
+python -m alembic upgrade head || echo "⚠️  Migration failed!"
+
 echo ""
 echo "✅ Setup complete!"
 echo ""

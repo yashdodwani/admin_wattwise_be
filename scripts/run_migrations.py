@@ -5,7 +5,9 @@ import subprocess
 import sys
 import os
 
-os.chdir(r"C:\Users\raksh\OneDrive\Desktop\projects\admin_wattwise_be")
+# Use current script directory to find project root
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+os.chdir(project_root)
 
 out_path = "alembic_result.txt"
 
