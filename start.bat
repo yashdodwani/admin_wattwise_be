@@ -40,7 +40,7 @@ echo.
 echo ✅ Setup complete!
 echo.
 echo 🌐 Starting server...
-echo 📖 API docs available at: http://localhost:8000/docs
+echo 📖 API docs available at: http://localhost:8001/docs
 echo.
 echo Press Ctrl+C to stop the server
 echo.

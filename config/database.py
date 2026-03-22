@@ -97,6 +97,7 @@ def init_db():
     import models.sms         # noqa: F401
     import models.settings    # noqa: F401
     import models.reference_data  # noqa: F401
+    import models.notification # noqa: F401
 
     Base.metadata.create_all(bind=engine)
     print("✓ Database tables created successfully")
@@ -115,6 +116,7 @@ def drop_db():
     import models.sms         # noqa: F401
     import models.settings    # noqa: F401
     import models.reference_data  # noqa: F401
+    import models.notification # noqa: F401
 
     Base.metadata.drop_all(bind=engine)
     print("✓ All database tables dropped")

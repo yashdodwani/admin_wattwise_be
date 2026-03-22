@@ -42,6 +42,7 @@ from models.transaction import Transaction  # noqa: F401
 from models.sms import SMSLog, SMSTemplate  # noqa: F401
 from models.settings import BillingSettings, NotificationPreference  # noqa: F401
 from models.reference_data import State, Discom  # noqa: F401
+from models.notification import Notification # noqa: F401
 
 target_metadata = Base.metadata
 

@@ -38,6 +38,12 @@ python -c "from config.database import init_db; init_db()" 2>/dev/null || {
 echo "🔄 Running database migrations..."
 python -m alembic upgrade head || echo "⚠️  Migration failed!"
 
+# Optional: Seed notifications if requested
+if [ "$SEED_NOTIFICATIONS" = "true" ]; then
+    echo "🌱 Seeding notifications..."
+    python -m scripts.seed_notifications || echo "⚠️  Notification seeding failed!"
+fi
+
 echo ""
 echo "✅ Setup complete!"
 echo ""
