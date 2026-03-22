@@ -146,6 +146,33 @@ app.include_router(reference_router, dependencies=[Depends(get_current_admin)])
 app.include_router(notification_router, dependencies=[Depends(get_current_admin)])
 
 
+# Import sync service
+from services.data_sync import sync_data
+
+async def run_data_sync_periodically():
+    """
+    Background task to sync data from User Portal DB every 8 minutes.
+    """
+    # Wait a bit on startup
+    await asyncio.sleep(10) 
+    
+    while True:
+        try:
+            logger.info("Starting scheduled data sync from User Portal...")
+            # Run the synchronous sync_data function in a thread
+            await asyncio.to_thread(sync_data)
+            logger.info("Data sync completed. Sleeping for 8 minutes.")
+        except Exception as e:
+            logger.error(f"Error during scheduled data sync: {e}")
+        
+        await asyncio.sleep(8 * 60) # 8 minutes
+
+@app.on_event("startup")
+async def start_data_sync_task():
+    """Start the data sync task."""
+    asyncio.create_task(run_data_sync_periodically())
+
+
 async def ping_server():
     """
     Background task to ping the server every 9 minutes to prevent sleeping.
